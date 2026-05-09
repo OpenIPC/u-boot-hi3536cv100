@@ -244,7 +244,12 @@
 
 /* according to CONFIG_CONS_INDEX */
 #define CONFIG_CUR_UART_BASE          CFG_SERIAL0
-#define CONFIG_PRODUCTNAME		"hi3536c"
+/*
+ * OpenIPC convention: env's `soc` var should match
+ * BR2_OPENIPC_SOC_MODEL in OpenIPC/firmware (hi3536cv100_lite_defconfig
+ * sets it to "hi3536cv100"). Vendor naming is just "hi3536c".
+ */
+#define CONFIG_PRODUCTNAME		"hi3536cv100"
 
 /*-----------------------------------------------------------------------
  * bootrom Configuration
@@ -284,6 +289,18 @@
 
 /* #define CONFIG_OSD_ENABLE */
 #define CONFIG_OSD_ENABLE
+
+/*
+ * hi-common.h enables CONFIG_CMD_UBI which needs >= 512 KiB malloc;
+ * also pulls UBIFS which needs CONFIG_LZO. The vendor's per-SoC
+ * MALLOC_LEN (line 100) is too small. Drop both so hi-common.h's
+ * larger malloc + the OpenIPC env block apply cleanly.
+ */
+#undef CONFIG_SYS_MALLOC_LEN
+#define CONFIG_LZO
+
+/* OpenIPC env block — see u-boot-hi3519v101 / u-boot-hi3520dv200 for context. */
+#include <configs/hi-common.h>
 
 #endif	/* __CONFIG_H */
 
