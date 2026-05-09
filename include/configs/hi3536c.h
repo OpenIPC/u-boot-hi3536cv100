@@ -290,17 +290,18 @@
 /* #define CONFIG_OSD_ENABLE */
 #define CONFIG_OSD_ENABLE
 
-/*
- * hi-common.h enables CONFIG_CMD_UBI which needs >= 512 KiB malloc;
- * also pulls UBIFS which needs CONFIG_LZO. The vendor's per-SoC
- * MALLOC_LEN (line 100) is too small. Drop both so hi-common.h's
- * larger malloc + the OpenIPC env block apply cleanly.
- */
-#undef CONFIG_SYS_MALLOC_LEN
-#define CONFIG_LZO
-
 /* OpenIPC env block — see u-boot-hi3519v101 / u-boot-hi3520dv200 for context. */
 #include <configs/hi-common.h>
+
+/*
+ * hi3536c has no compressed/ subdir — no mini-boot LZMA wrapper —
+ * so raw u-boot.bin is what lives in the 256 KiB boot partition.
+ * Vendor's full feature set + hi-common.h env produces a 383 KiB
+ * binary; trim UBI/UBIFS (NAND boot only, OpenIPC NVR profiles use
+ * SPI NOR squashfs) to fit. Keep MTDPARTS for the bootargs env var.
+ */
+#undef CONFIG_CMD_UBI
+#undef CONFIG_CMD_UBIFS
 
 #endif	/* __CONFIG_H */
 
