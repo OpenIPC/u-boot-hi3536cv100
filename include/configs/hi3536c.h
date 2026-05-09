@@ -311,6 +311,13 @@
 #undef CONFIG_CMD_PCMCIA
 #undef CONFIG_CMD_FAT
 #undef CONFIG_CMD_FS_GENERIC
+/*
+ * cmd_ext2 / fs/ext2/dev.c need get_partition_info(), which lives
+ * inside a big #if (CMD_USB||MMC||...) block in disk/part.c. With
+ * CMD_USB gone, the function isn't compiled — link fails. EXT2 boot
+ * is unused on the SPI-NOR-squashfs path anyway, so drop the cmd.
+ */
+#undef CONFIG_CMD_EXT2
 
 #endif	/* __CONFIG_H */
 
