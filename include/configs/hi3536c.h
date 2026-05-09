@@ -297,11 +297,20 @@
  * hi3536c has no compressed/ subdir — no mini-boot LZMA wrapper —
  * so raw u-boot.bin is what lives in the 256 KiB boot partition.
  * Vendor's full feature set + hi-common.h env produces a 383 KiB
- * binary; trim UBI/UBIFS (NAND boot only, OpenIPC NVR profiles use
- * SPI NOR squashfs) to fit. Keep MTDPARTS for the bootargs env var.
+ * binary. Trim everything OpenIPC's hi3536cv100_lite SPI NOR
+ * squashfs boot flow doesn't need:
+ *   - UBI/UBIFS  (NAND only)
+ *   - USB        (no USB boot)
+ *   - PCMCIA     (irrelevant on this SoC)
+ *   - FAT        (no SD-card update flow in lite profile)
+ * Keeps MTDPARTS itself for the bootargs env var.
  */
 #undef CONFIG_CMD_UBI
 #undef CONFIG_CMD_UBIFS
+#undef CONFIG_CMD_USB
+#undef CONFIG_CMD_PCMCIA
+#undef CONFIG_CMD_FAT
+#undef CONFIG_CMD_FS_GENERIC
 
 #endif	/* __CONFIG_H */
 
