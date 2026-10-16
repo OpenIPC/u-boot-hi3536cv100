@@ -96,10 +96,15 @@ int sf_saveenv(void)
 	erase_length = (sector * CONFIG_ENV_SECT_SIZE);
 	if (erase_length < spiflash_info->erasesize)
 	{
-		printf("Warning: Erase size 0x%08x smaller than one "	\
-			"erase block 0x%08x\n", erase_length, spiflash_info->erasesize);
-		printf("         Erasing 0x%08x instead\n", spiflash_info->erasesize);
-		erase_length = spiflash_info->erasesize;
+		/* Erasing a whole block would run past the env partition: in
+		 * OpenIPC's layout the kernel starts 64k after the env, so a
+		 * chip with larger erase blocks would lose the start of the
+		 * kernel. Refuse rather than erase what is not the env. */
+		printf("Error: this flash erases 0x%08x at a time, more than "	\
+			"the 0x%08x env partition at 0x%08x; not saving\n",
+			spiflash_info->erasesize, erase_length, CONFIG_ENV_OFFSET);
+		ret = 1;
+		goto done;
 	}
 	printf("Erasing SPI flash, offset 0x%08x size %s ...",
 		CONFIG_ENV_OFFSET, ultohstr(erase_length));
@@ -128,6 +133,13 @@ int sf_saveenv(void)
 	return ret;
 }
 
+#ifdef CONFIG_ENV_LEGACY_OFFSET
+static int sf_read_legacy(ulong off, void *buf, ulong len)
+{
+	return spi_flash_read(env_flash, CONFIG_ENV_LEGACY_OFFSET + off, len, buf);
+}
+#endif
+
 void sf_env_relocate_spec(void)
 {
 	int ret;
@@ -153,6 +165,12 @@ err_read:
 	env_flash = NULL;
 err_probe:
 err_crc:
+#ifdef CONFIG_ENV_LEGACY_OFFSET
+	if (env_flash && env_import_legacy(sf_read_legacy) == 0) {
+		gd->env_valid = 1;
+		return;
+	}
+#endif
 	puts("*** Warning - bad CRC, using default environment\n\n");
 
 	set_default_env();
